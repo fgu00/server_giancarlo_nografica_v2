@@ -41,20 +41,22 @@ public class login  implements Runnable{
           accedi=clientsocket;
           System.out.println(accedi.getInetAddress());
           try {
-            out=new PrintWriter(accedi.getOutputStream(),true);
-            in=new BufferedReader(new InputStreamReader(accedi.getInputStream()));
-              oi = accedi.getOutputStream();
-             oo = new ObjectOutputStream(oi);
+           // out=new PrintWriter(accedi.getOutputStream(),true);
+            //in=new BufferedReader(new InputStreamReader(accedi.getInputStream()));
+              o=new ObjectInputStream(accedi.getInputStream());
+              //oi = accedi.getOutputStream();
+             oo = new ObjectOutputStream(accedi.getOutputStream());
+             
             log=true;
         } catch (IOException ex) {
             Logger.getLogger(login.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    public void interazioni() throws IOException{
+    public void interazioni() throws IOException, ClassNotFoundException{
         boolean ciclo=true;
         while(ciclo==true){
         try {
-            String richiesta=in.readLine();
+            String richiesta=(String) o.readObject();
             System.out.println(richiesta);
             String[]m=richiesta.split(":");
             int n=Integer.parseInt(m[0]);
@@ -85,21 +87,28 @@ public class login  implements Runnable{
                         }
                     }
                     if(esiste==true){
-                        oo.writeObject("1");
-                        oo.writeObject(persone.get(posizione));
+                   ObjectOutputStream o4=new ObjectOutputStream(accedi.getOutputStream());
+                   o4.writeObject("1");
+                   o4.writeObject(persone.get(posizione));
                         System.out.println("u");
                     }else{
-                        oo.writeObject("0");
+                try (ObjectOutputStream o4 = new ObjectOutputStream(accedi.getOutputStream())) {
+                    o4.writeObject("0");
+                    o4.flush();
+                }
                         System.out.println("mlwdw");
                     }
                     break;
                 case 2:
                     //per creare un nuovo canale
+                    ObjectOutputStream o4=new ObjectOutputStream(accedi.getOutputStream());
                     String nome2=m[1];
                     canale nuovo=new canale(nome2);
                     gc.aggiungicanale(nuovo);
                     a.new_canale(nuovo);
-                    oo.writeObject(a);
+                    o4.writeObject(a);
+                    o4.flush();
+                    o4.close();
                     break;
                 case 3:
                     //accedi ad un canale
@@ -109,9 +118,12 @@ public class login  implements Runnable{
                     break;
                 case 4:
                     //eliminare un canale
+                    ObjectOutputStream o2=new ObjectOutputStream(accedi.getOutputStream());
                     String id2=m[1];
                     gc.elimina_canale(Integer.parseInt(id2));
-                    oo.writeObject(a);
+                    o2.writeObject(a);
+                    o2.flush();
+                    o2.close();
                     break;
                 case 5:
                       //uscire
@@ -139,6 +151,8 @@ public class login  implements Runnable{
        try { 
            interazioni();
        } catch (IOException ex) {
+           Logger.getLogger(login.class.getName()).log(Level.SEVERE, null, ex);
+       } catch (ClassNotFoundException ex) {
            Logger.getLogger(login.class.getName()).log(Level.SEVERE, null, ex);
        }
     }
